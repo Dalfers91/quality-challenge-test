@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Ninety One — Quality Challenge</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --lg: #134848; --lg-light: #1a5e5e; --ot: #009D80; --ot-glow: #00c9a3;
+    --cc: #FBAA96; --ai: #221B3B; --gg: #74908D; --sc: #E8E5CE;
+    --pb: #591739; --wy: #FCAA28; --pr: #D83949; --b02: #424242;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--ai); color: #fff; min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+  .bg-grid { position: fixed; inset: 0; z-index: 0; pointer-events: none; background-image: radial-gradient(ellipse 600px 400px at 15% 20%, rgba(0,157,128,0.12), transparent), radial-gradient(ellipse 500px 500px at 85% 75%, rgba(89,23,57,0.1), transparent), radial-gradient(ellipse 300px 300px at 50% 50%, rgba(19,72,72,0.08), transparent); }
+  .bg-grid::after { content:''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px); background-size: 60px 60px; }
+  .screen { display: none; position: relative; z-index: 1; min-height: 100vh; padding: 40px 32px; }
+  .screen.active { display: flex; flex-direction: column; animation: fadeUp 0.5s ease; }
+  @keyframes fadeUp { from { opacity:0; transform: translateY(24px); } to { opacity:1; transform: translateY(0); } }
+  .logo-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; opacity: 0.7; cursor: default; user-select: none; }
+  .logo-bar .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ot); }
+  .logo-bar span { font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: var(--gg); }
+  .welcome-hero { flex:1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 28px; }
+  .welcome-hero h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 52px; line-height: 1.15; color: #fff; max-width: 680px; }
+  .welcome-hero h1 em { font-style: italic; color: var(--ot-glow); }
+  .welcome-hero p { font-size: 18px; line-height: 1.6; color: var(--gg); max-width: 520px; }
+  .btn-primary { display: inline-flex; align-items: center; gap: 10px; padding: 18px 44px; border: none; border-radius: 60px; background: var(--ot); color: #fff; font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; letter-spacing: 0.3px; }
+  .btn-primary:hover { background: var(--ot-glow); transform: scale(1.03); }
+  .btn-primary:active { transform: scale(0.97); }
+  .btn-ghost { display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px; border: 1.5px solid rgba(255,255,255,0.2); border-radius: 60px; background: transparent; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; }
+  .btn-ghost:hover { border-color: var(--ot); color: var(--ot); }
+  .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+  .progress-track { flex:1; height: 4px; background: rgba(255,255,255,0.08); border-radius: 4px; margin: 0 20px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--ot), var(--ot-glow)); border-radius: 4px; transition: width 0.5s ease; }
+  .step-label { font-size: 14px; color: var(--gg); white-space: nowrap; font-weight: 500; }
+  .question-card { flex:1; display: flex; flex-direction: column; justify-content: center; max-width: 780px; margin: 0 auto; width: 100%; }
+  .q-category { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 2.5px; color: var(--ot); margin-bottom: 16px; font-weight: 600; }
+  .q-category .icon { font-size: 18px; }
+  .q-text { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 400; line-height: 1.4; color: #fff; margin-bottom: 28px; }
+  .options-grid { display: flex; flex-direction: column; gap: 14px; }
+  .option-btn { position: relative; display: flex; align-items: center; gap: 16px; padding: 22px 28px; border: 1.5px solid rgba(255,255,255,0.1); border-radius: 16px; background: rgba(255,255,255,0.03); color: #fff; font-family: 'DM Sans', sans-serif; font-size: 16px; text-align: left; cursor: pointer; transition: all 0.3s ease; backdrop-filter: blur(8px); }
+  .option-btn:hover { border-color: var(--ot); background: rgba(0,157,128,0.06); }
+  .option-btn:active { transform: scale(0.98); }
+  .option-btn.correct { border-color: var(--ot-glow); background: rgba(0,157,128,0.18); box-shadow: 0 0 40px rgba(0,201,163,0.15); }
+  .option-btn.wrong { border-color: var(--pr); background: rgba(216,57,73,0.12); }
+  .opt-letter { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; flex-shrink: 0; transition: all 0.3s ease; }
+  .option-btn.correct .opt-letter { background: var(--ot-glow); }
+  .option-btn.wrong .opt-letter { background: var(--pr); }
+  .feedback-box { margin-top: 24px; padding: 20px 24px; border-radius: 14px; font-size: 15px; line-height: 1.6; animation: fadeUp 0.4s ease; }
+  .feedback-box.correct-fb { background: rgba(0,157,128,0.1); border: 1px solid rgba(0,157,128,0.2); color: var(--ot-glow); }
+  .feedback-box.wrong-fb { background: rgba(216,57,73,0.08); border: 1px solid rgba(216,57,73,0.15); color: var(--cc); }
+  .next-btn-wrap { margin-top: 32px; text-align: center; }
+
+  /* ── Visual elements ── */
+  .stat-cards { display: flex; gap: 16px; margin-bottom: 28px; }
+  .stat-card { flex:1; padding: 20px 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); }
+  .stat-card .sc-val { font-family: 'Fraunces', serif; font-size: 36px; font-weight: 500; margin-bottom: 4px; }
+  .stat-card .sc-label { font-size: 12px; color: var(--gg); line-height: 1.4; }
+  .stat-card.red .sc-val { color: var(--pr); }
+  .stat-card.teal .sc-val { color: var(--ot-glow); }
+
+  /* Chart */
+  .chart-container { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 24px; margin-bottom: 28px; position: relative; }
+  .chart-container canvas { width: 100%; height: 260px; }
+  .chart-title { font-size: 12px; color: var(--gg); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; font-weight: 600; }
+  .chart-annotations { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
+  .chart-anno { font-size: 11px; display: flex; align-items: center; gap: 6px; }
+  .chart-anno .ca-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* Multi-select tiles */
+  .tiles-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+  .tile-btn { padding: 18px 20px; border: 1.5px solid rgba(255,255,255,0.1); border-radius: 14px; background: rgba(255,255,255,0.03); color: #fff; font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 1.4; text-align: left; cursor: pointer; transition: all 0.3s ease; user-select: none; }
+  .tile-btn:hover { border-color: var(--ot); background: rgba(0,157,128,0.06); }
+  .tile-btn:active { transform: scale(0.97); }
+  .tile-btn.selected { border-color: var(--ot); background: rgba(0,157,128,0.12); box-shadow: 0 0 20px rgba(0,157,128,0.08); }
+  .tile-btn.correct-tile { border-color: var(--ot-glow); background: rgba(0,157,128,0.18); }
+  .tile-btn.wrong-tile { border-color: var(--pr); background: rgba(216,57,73,0.12); }
+  .tile-btn.missed-tile { border-color: var(--wy); background: rgba(252,170,40,0.08); }
+  .tile-check { display: inline-block; width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid rgba(255,255,255,0.2); margin-right: 10px; vertical-align: middle; transition: all 0.3s ease; text-align: center; line-height: 18px; font-size: 12px; }
+  .tile-btn.selected .tile-check { border-color: var(--ot); background: var(--ot); color: #fff; }
+  .tile-btn.correct-tile .tile-check { border-color: var(--ot-glow); background: var(--ot-glow); }
+  .tile-btn.wrong-tile .tile-check { border-color: var(--pr); background: var(--pr); }
+  .tiles-hint { font-size: 12px; color: var(--gg); margin-bottom: 16px; font-style: italic; }
+  .tiles-submit { display: inline-flex; padding: 14px 36px; border: none; border-radius: 60px; background: var(--ot); color: #fff; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; margin-top: 8px; }
+  .tiles-submit:hover { background: var(--ot-glow); }
+  .tiles-submit:disabled { opacity: 0.3; pointer-events: none; }
+
+  /* Results */
+  .results-center { flex:1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 20px; padding-bottom: 20px; }
+  .score-ring { position: relative; width: 160px; height: 160px; }
+  .score-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .score-ring circle { fill: none; stroke-width: 6; cx: 100; cy: 100; r: 90; }
+  .score-ring .track { stroke: rgba(255,255,255,0.06); }
+  .score-ring .fill { stroke: var(--ot-glow); stroke-linecap: round; stroke-dasharray: 565; stroke-dashoffset: 565; transition: stroke-dashoffset 1.5s ease; }
+  .score-ring .score-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .score-ring .score-num { font-family: 'Fraunces', serif; font-size: 48px; font-weight: 500; color: #fff; }
+  .score-ring .score-of { font-size: 13px; color: var(--gg); margin-top: -4px; }
+  .result-title { font-family: 'Fraunces', serif; font-size: 30px; font-weight: 500; color: #fff; line-height: 1.3; }
+  .result-desc { font-size: 15px; color: var(--gg); max-width: 480px; line-height: 1.6; }
+
+  /* Email capture */
+  .email-capture { width: 100%; max-width: 460px; padding: 28px 32px; border-radius: 20px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+  .email-capture h3 { font-family: 'Fraunces', serif; font-size: 19px; font-weight: 500; margin-bottom: 6px; color: #fff; }
+  .ec-sub { font-size: 13px; color: var(--gg); margin-bottom: 18px; line-height: 1.5; }
+  .ec-field { width: 100%; padding: 15px 18px; border: 1.5px solid rgba(255,255,255,0.12); border-radius: 12px; background: rgba(255,255,255,0.06); color: #fff; font-family: 'DM Sans', sans-serif; font-size: 16px; outline: none; transition: border-color 0.3s ease; margin-bottom: 10px; }
+  .ec-field::placeholder { color: rgba(255,255,255,0.3); }
+  .ec-field:focus { border-color: var(--ot); }
+  .ec-field.error { border-color: var(--pr); }
+  .ec-error-msg { font-size: 12px; color: var(--pr); margin-bottom: 8px; display: none; }
+  .ec-submit { width: 100%; padding: 16px; border: none; border-radius: 12px; background: var(--ot); color: #fff; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; margin-top: 4px; }
+  .ec-submit:hover { background: var(--ot-glow); }
+  .ec-submit:active { transform: scale(0.97); }
+  .ec-privacy { font-size: 11px; color: rgba(255,255,255,0.25); line-height: 1.5; margin-top: 12px; }
+  .ec-success { text-align: center; padding: 24px 20px; animation: fadeUp 0.4s ease; }
+  .ec-success .tick { width: 56px; height: 56px; border-radius: 50%; background: rgba(0,157,128,0.15); margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+  .ec-success h3 { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 500; margin-bottom: 6px; }
+  .ec-success p { font-size: 14px; color: var(--gg); line-height: 1.5; }
+  .sync-status { font-size: 11px; margin-top: 8px; padding: 6px 12px; border-radius: 8px; display: inline-block; }
+  .sync-ok { background: rgba(0,157,128,0.1); color: var(--ot-glow); }
+  .sync-fail { background: rgba(216,57,73,0.1); color: var(--cc); }
+  .result-actions { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  .entry-counter { position: fixed; bottom: 14px; right: 18px; z-index: 10; font-size: 11px; color: rgba(255,255,255,0.12); letter-spacing: 1px; }
+
+  /* T&Cs */
+  .tcs-toggle { font-size: 12px; color: var(--gg); cursor: pointer; text-decoration: underline; margin-top: 12px; background: none; border: none; font-family: 'DM Sans', sans-serif; transition: color 0.3s; }
+  .tcs-toggle:hover { color: var(--ot); }
+  .tcs-content { display: none; width: 100%; max-width: 460px; max-height: 300px; overflow-y: auto; margin-top: 12px; padding: 24px; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); text-align: left; }
+  .tcs-content.open { display: block; animation: fadeUp 0.3s ease; }
+  .tcs-content h4 { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 500; color: #fff; margin-bottom: 12px; }
+  .tcs-content h5 { font-size: 12px; font-weight: 600; color: var(--ot); text-transform: uppercase; letter-spacing: 1px; margin: 16px 0 8px; }
+  .tcs-content p { font-size: 11px; color: var(--gg); line-height: 1.7; margin-bottom: 6px; }
+  .tcs-content ul { font-size: 11px; color: var(--gg); line-height: 1.7; margin: 0 0 6px 16px; }
+  .tcs-content::-webkit-scrollbar { width: 4px; }
+  .tcs-content::-webkit-scrollbar-track { background: transparent; }
+  .tcs-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+  /* Admin */
+  .admin-overlay { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.95); backdrop-filter: blur(12px); padding: 40px; overflow-y: auto; }
+  .admin-overlay.active { display: block; animation: fadeUp 0.3s ease; }
+  .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+  .admin-header h2 { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 500; }
+  .admin-close { padding: 10px 24px; border: 1px solid rgba(255,255,255,0.2); border-radius: 30px; background: transparent; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; }
+  .admin-stats { display: flex; gap: 16px; margin-bottom: 28px; }
+  .admin-stat { padding: 18px 24px; border-radius: 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); flex:1; text-align: center; }
+  .admin-stat .as-num { font-family: 'Fraunces', serif; font-size: 32px; font-weight: 500; color: var(--ot-glow); }
+  .admin-stat .as-label { font-size: 12px; color: var(--gg); margin-top: 4px; }
+  .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .admin-table th { text-align: left; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--ot); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+  .admin-table td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); color: rgba(255,255,255,0.8); }
+  .admin-actions { margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .admin-btn { padding: 12px 28px; border: none; border-radius: 30px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+  .admin-btn.export { background: var(--ot); color: #fff; }
+  .admin-btn.export:hover { background: var(--ot-glow); }
+  .admin-btn.clear { background: rgba(216,57,73,0.12); color: var(--pr); border: 1px solid rgba(216,57,73,0.25); }
+  .admin-btn.retry { background: rgba(252,170,40,0.15); color: var(--wy); border: 1px solid rgba(252,170,40,0.3); }
+  .winner-banner { margin-top: 20px; padding: 20px 28px; border-radius: 14px; background: rgba(0,157,128,0.1); border: 1px solid rgba(0,157,128,0.2); text-align: center; animation: fadeUp 0.4s ease; }
+  .winner-banner .wb-name { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 500; color: var(--ot-glow); }
+  .winner-banner .wb-email { font-size: 14px; color: var(--gg); margin-top: 4px; }
+  @media (max-width: 820px) {
+    .welcome-hero h1 { font-size: 38px; }
+    .q-text { font-size: 24px; }
+    .result-title { font-size: 26px; }
+    .stat-cards { flex-direction: column; }
+    .tiles-grid { grid-template-columns: 1fr; }
+    .admin-stats { flex-direction: column; }
+  }
+  .confetti-piece { position: fixed; width: 10px; height: 10px; z-index: 999; animation: confettiFall 3s ease-in forwards; pointer-events: none; }
+  @keyframes confettiFall { 0% { opacity:1; transform: translateY(0) rotate(0deg); } 100% { opacity:0; transform: translateY(100vh) rotate(720deg); } }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="entry-counter" id="entryCounter"></div>
+
+<!-- WELCOME -->
+<div id="screen-welcome" class="screen active">
+  <div class="logo-bar" id="logoMain"><div class="dot"></div><span>Ninety One</span></div>
+  <div class="welcome-hero">
+    <h1>Can you spot a <em>Quality</em> company?</h1>
+    <p>Test your investment instincts against the Ninety One Quality framework. Four questions. Two minutes. One chance to prove you think like a Quality investor.</p>
+    <button class="btn-primary" onclick="startQuiz()">Start the challenge &rarr;</button>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="screen-quiz" class="screen">
+  <div class="logo-bar"><div class="dot"></div><span>Ninety One</span></div>
+  <div class="quiz-header">
+    <span class="step-label" id="stepLabel">1 of 4</span>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+  <div class="question-card" id="questionCard"></div>
+</div>
+
+<!-- RESULTS -->
+<div id="screen-results" class="screen">
+  <div class="logo-bar"><div class="dot"></div><span>Ninety One</span></div>
+  <div class="results-center">
+    <div class="score-ring">
+      <svg viewBox="0 0 200 200"><circle class="track"/><circle class="fill" id="scoreCircle"/></svg>
+      <div class="score-text">
+        <div class="score-num" id="scoreNum">0</div>
+        <div class="score-of">out of 4</div>
+      </div>
+    </div>
+    <div class="result-title" id="resultTitle"></div>
+    <div class="result-desc" id="resultDesc"></div>
+    <div class="email-capture" id="emailCapture"></div>
+    <div class="result-actions" id="resultActions" style="display:none">
+      <button class="btn-primary" onclick="resetQuiz()">Next player &rarr;</button>
+    </div>
+    <button class="tcs-toggle" onclick="document.getElementById('tcsContent').classList.toggle('open')">View Terms &amp; Conditions</button>
+    <div class="tcs-content" id="tcsContent">
+      <h4>Ninety One Quality Challenge &mdash; Prize Draw Terms &amp; Conditions</h4>
+
+      <h5>Promoter</h5>
+      <p>1. The promoter is Ninety One UK Limited, 55 Gresham Street, London, EC2V 7QQ. Authorised and regulated by the Financial Conduct Authority.</p>
+
+      <h5>Eligibility</h5>
+      <p>2. Entry is open to attendees of the SJP Conference on 3 June 2026 who are aged 18 or over. No purchase is necessary to enter.</p>
+      <p>3. Employees of Ninety One group companies, and their immediate families are not eligible to enter.</p>
+
+      <h5>How to enter</h5>
+      <p>4. To enter the prize draw, participants must complete the Ninety One Quality Challenge quiz at the Ninety One exhibition stand, achieve a score of 4 out of 4, and submit their name and email address via the on-screen entry form.</p>
+      <p>5. Entry is limited to one per person. Duplicate entries will be identified and removed. The promoter reserves the right to disqualify entries that it reasonably believes to be duplicate, fraudulent, or otherwise in breach of these terms.</p>
+      <p>6. The closing date for entries is 17:00 on 3 June 2026. Entries received after this time will not be included in the draw.</p>
+      <p>7. These terms and conditions are available for viewing at the Ninety One exhibition stand and can be provided in full by email on request to <a href="mailto:enquiries@ninetyone.com" style="color:var(--ot)">enquiries@ninetyone.com</a>. Participants are advised to read these terms before entering.</p>
+
+      <h5>The prize</h5>
+      <p>8. The prize consists of select items, each produced by a company held in the Ninety One Quality portfolio:</p>
+      <ul>
+        <li>NIVEA premium gift set &mdash; via Beiersdorf</li>
+        <li>EA Games voucher to the value of &pound;30 &mdash; via Electronic Arts</li>
+        <li>Booking.com voucher to the value of &pound;50 &mdash; via Booking Holdings</li>
+      </ul>
+      <p>9. The total approximate retail value of the prize is no more than &pound;50 per gift. The prize is non-transferable and there is no cash alternative. The promoter reserves the right to substitute the prize for an alternative of equal or greater value if circumstances require.</p>
+      <p>10. The EA Games and Booking.com vouchers are subject to the respective third-party terms and conditions of those providers. The promoter accepts no responsibility for any issues arising from the redemption of third-party vouchers.</p>
+
+      <h5>Winner selection and notification</h5>
+      <p>11. The winner will be selected at random from all eligible entries before the close of the event. The draw will take place on the day of the event (3 June 2026).</p>
+      <p>12. The winner will be contacted on 3 June 2026 to collect their prize. If the winner does not respond within 14 calendar days of notification, or if the prize is returned as undeliverable, the promoter reserves the right to select an alternative winner using the same random selection method.</p>
+
+      <h5>Data protection</h5>
+      <p>13. Personal data collected through the quiz (name and email address) will be processed by Ninety One UK Limited solely for the purpose of administering this prize draw and contacting the winner, in accordance with the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018.</p>
+      <p>14. Data will not be added to any marketing distribution lists, used for any promotional purpose, or shared with any third party, unless required by law or regulation.</p>
+      <p>15. All personal data collected will be securely deleted within 30 calendar days of the draw taking place and the winner being confirmed.</p>
+      <p>16. Participants may request access to, correction of, or deletion of their personal data at any time by contacting the promoter at the address above or by emailing <a href="mailto:enquiries@ninetyone.com" style="color:var(--ot)">enquiries@ninetyone.com</a>.</p>
+
+      <h5>General</h5>
+      <p>17. The promoter reserves the right to amend, suspend, or cancel the draw at any time.</p>
+      <p>18. These terms and conditions are governed by English law, and any disputes will be subject to the exclusive jurisdiction of the courts of England and Wales.</p>
+      <p>19. These terms and conditions should be read in conjunction with the promoter&rsquo;s privacy policy, available at <a href="https://www.ninetyone.com" style="color:var(--ot)" target="_blank">www.ninetyone.com</a>.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="admin-overlay" id="adminPanel">
+  <div class="admin-header"><h2>Draw entries</h2><button class="admin-close" onclick="closeAdmin()">Close</button></div>
+  <div class="admin-stats" id="adminStats"></div>
+  <div id="adminTableWrap"></div>
+  <div id="winnerArea"></div>
+  <div class="admin-actions">
+    <button class="admin-btn export" onclick="exportCSV()">Export CSV</button>
+    <button class="admin-btn export" onclick="pickWinner()">Pick random winner</button>
+    <button class="admin-btn retry" onclick="retryFailed()">Retry failed syncs</button>
+    <button class="admin-btn clear" onclick="clearEntries()">Clear all entries</button>
+  </div>
+</div>
+
+<script>
+/* ── Google Sheets config ── */
+/* ── Pardot form handler config ── */
+var PARDOT_URL = "https://weare.ninetyone.com/l/28902/2026-05-27/9rgtz1";
+var CONFIGURED = true;
+
+function submitToPardot(firstName, lastName, email, scoreVal) {
+  return new Promise(function(resolve, reject) {
+    var data = new URLSearchParams();
+    data.append('First_Name', firstName);
+    data.append('Last_Name', lastName);
+    data.append('email', email);
+    data.append('Quiz_Score', scoreVal + '/4');
+
+    // Method 1: fetch with no-cors (sends the data, can't read response)
+    fetch(PARDOT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: data
+    }).then(function() {
+      resolve('ok');
+    }).catch(function() {
+      // Method 2: fallback to hidden iframe if fetch fails
+      try {
+        var iframe = document.createElement('iframe');
+        iframe.name = 'pardot_' + Date.now(); iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+        var form = document.createElement('form');
+        form.method = 'POST'; form.action = PARDOT_URL; form.target = iframe.name; form.style.display = 'none';
+        var fields = {'First_Name': firstName, 'Last_Name': lastName, 'email': email, 'Quiz_Score': scoreVal + '/4'};
+        for (var key in fields) {
+          var inp = document.createElement('input'); inp.type='hidden'; inp.name=key; inp.value=fields[key];
+          form.appendChild(inp);
+        }
+        document.body.appendChild(form);
+        form.submit();
+        setTimeout(function(){ try{document.body.removeChild(iframe);}catch(e){} try{document.body.removeChild(form);}catch(e){} },3000);
+        resolve('fallback-ok');
+      } catch(e) { reject('error'); }
+    });
+  });
+}
+
+var TOTAL_Q = 4;
+var currentQ = 0, score = 0, answered = false;
+
+/* ── Booking Holdings price data (monthly, split-adjusted approx) ── */
+var bookingData = [
+  {d:'Jan 19',p:76},{d:'Apr 19',p:80},{d:'Jul 19',p:82},{d:'Oct 19',p:81},{d:'Jan 20',p:83},
+  {d:'Feb 20',p:78},{d:'Mar 20',p:52},{d:'Jun 20',p:68},{d:'Sep 20',p:72},{d:'Dec 20',p:90},
+  {d:'Mar 21',p:98},{d:'Jun 21',p:96},{d:'Sep 21',p:100},{d:'Dec 21',p:96},
+  {d:'Mar 22',p:94},{d:'Jun 22',p:80},{d:'Sep 22',p:76},{d:'Dec 22',p:82},
+  {d:'Mar 23',p:112},{d:'Jun 23',p:116},{d:'Sep 23',p:128},{d:'Dec 23',p:150},
+  {d:'Mar 24',p:154},{d:'Jun 24',p:162},{d:'Sep 24',p:170},{d:'Dec 24',p:202},
+  {d:'Mar 25',p:210},{d:'Jun 25',p:234},{d:'Sep 25',p:220},{d:'Dec 25',p:210},
+  {d:'Jan 26',p:195},{d:'Apr 26',p:182}
+];
+
+function renderChart() {
+  var container = document.getElementById('chartArea');
+  if (!container) return;
+  var canvas = document.getElementById('bookingChart');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width = canvas.offsetWidth * 2;
+  var H = canvas.height = canvas.offsetHeight * 2;
+  ctx.scale(1,1);
+  var padL=60, padR=30, padT=30, padB=50;
+  var cW = W-padL-padR, cH = H-padT-padB;
+  var prices = bookingData.map(function(d){return d.p;});
+  var minP = 30, maxP = 250;
+  var n = bookingData.length;
+
+  function x(i){ return padL + (i/(n-1))*cW; }
+  function y(p){ return padT + cH - ((p-minP)/(maxP-minP))*cH; }
+
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+  [50,100,150,200,250].forEach(function(p){
+    ctx.beginPath(); ctx.moveTo(padL,y(p)); ctx.lineTo(W-padR,y(p)); ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.font='20px DM Sans'; ctx.textAlign='right';
+    ctx.fillText('$'+p, padL-10, y(p)+6);
+  });
+
+  // X labels
+  ctx.textAlign='center'; ctx.font='18px DM Sans'; ctx.fillStyle='rgba(255,255,255,0.25)';
+  [0,5,10,15,20,25,n-1].forEach(function(i){
+    if(i<n) ctx.fillText(bookingData[i].d, x(i), H-padB+30);
+  });
+
+  // Area fill
+  ctx.beginPath(); ctx.moveTo(x(0),y(prices[0]));
+  for(var i=1;i<n;i++) ctx.lineTo(x(i),y(prices[i]));
+  ctx.lineTo(x(n-1),H-padB); ctx.lineTo(x(0),H-padB); ctx.closePath();
+  var grad = ctx.createLinearGradient(0,padT,0,H-padB);
+  grad.addColorStop(0,'rgba(0,157,128,0.2)'); grad.addColorStop(1,'rgba(0,157,128,0)');
+  ctx.fillStyle=grad; ctx.fill();
+
+  // Line
+  ctx.beginPath(); ctx.moveTo(x(0),y(prices[0]));
+  for(var i=1;i<n;i++) ctx.lineTo(x(i),y(prices[i]));
+  ctx.strokeStyle='#00c9a3'; ctx.lineWidth=3; ctx.stroke();
+
+  // Annotations
+  function anno(idx,label,col,above){
+    var px=x(idx), py=y(prices[idx]);
+    ctx.beginPath(); ctx.arc(px,py,6,0,Math.PI*2); ctx.fillStyle=col; ctx.fill();
+    ctx.font='bold 18px DM Sans'; ctx.fillStyle=col; ctx.textAlign='center';
+    ctx.fillText(label, px, above ? py-16 : py+26);
+  }
+  anno(4,'$83 peak','rgba(255,255,255,0.6)',true);
+  anno(6,'$52 low','#D83949',false);
+  anno(n-1,'$182','#00c9a3',true);
+
+  // COVID zone
+  ctx.fillStyle='rgba(216,57,73,0.08)';
+  ctx.fillRect(x(5),padT,x(8)-x(5),cH);
+  ctx.font='16px DM Sans'; ctx.fillStyle='rgba(216,57,73,0.4)'; ctx.textAlign='center';
+  ctx.fillText('COVID-19',x(6.5),padT+20);
+}
+
+function renderQ1() {
+  return '<div class="q-category"><span class="icon">\u{1F3AF}</span> SJP investment beliefs</div>'+
+    '<div class="q-text">SJP\u2019s first investment belief states that client outcomes are at the heart of everything. Which of these best reflects that principle in practice?</div>'+
+    '<div class="options-grid">'+
+    '<button class="option-btn" onclick="selectOption(0)"><span class="opt-letter">A</span><span>Chasing the highest short-term return, regardless of risk</span></button>'+
+    '<button class="option-btn" onclick="selectOption(1)"><span class="opt-letter">B</span><span>Starting with \u2018what does the client need?\u2019 before looking at the opportunity set</span></button>'+
+    '<button class="option-btn" onclick="selectOption(2)"><span class="opt-letter">C</span><span>Copying the index to avoid underperformance</span></button>'+
+    '<button class="option-btn" onclick="selectOption(3)"><span class="opt-letter">D</span><span>Reacting to every market headline with a portfolio change</span></button>'+
+    '</div>'+
+    '<div id="feedbackArea"></div>'+
+    '<div class="next-btn-wrap" id="nextWrap" style="display:none"><button class="btn-primary" onclick="nextQuestion()">Next question \u2192</button></div>';
+}
+
+function renderQ2() {
+  return '<div class="q-category"><span class="icon">\u{1F6E1}\uFE0F</span> What is a quality portfolio?</div>'+
+    '<div class="q-text">We invest in businesses that have enduring competitive advantages that enable them to continue compounding earnings regardless of whether the economy is booming or in freefall. Using the COVID-19 market event as an example, how do you think the Ninety One Quality portfolio held up?</div>'+
+    '<div class="stat-cards">'+
+      '<div class="stat-card red"><div class="sc-val">\u221234%</div><div class="sc-label">MSCI ACWI drawdown<br>during COVID-19</div></div>'+
+      '<div class="stat-card teal"><div class="sc-val">329 days</div><div class="sc-label">Time for the index<br>to fully recover</div></div>'+
+    '</div>'+
+    '<div class="options-grid">'+
+    '<button class="option-btn" onclick="selectOption(0)"><span class="opt-letter">A</span><span>It fell more than the market \u2014 around 40% or more</span></button>'+
+    '<button class="option-btn" onclick="selectOption(1)"><span class="opt-letter">B</span><span>It fell roughly the same as the market \u2014 around 34%</span></button>'+
+    '<button class="option-btn" onclick="selectOption(2)"><span class="opt-letter">C</span><span>It fell less than the market \u2014 cushioning the drawdown and recovering faster</span></button>'+
+    '<button class="option-btn" onclick="selectOption(3)"><span class="opt-letter">D</span><span>It didn\u2019t fall at all \u2014 quality stocks were fully insulated</span></button>'+
+    '</div>'+
+    '<div id="feedbackArea"></div>'+
+    '<div class="next-btn-wrap" id="nextWrap" style="display:none"><button class="btn-primary" onclick="nextQuestion()">Next question \u2192</button></div>';
+}
+
+function renderQ3() {
+  return '<div class="q-category"><span class="icon">\u{1F4C8}</span> Booking Holdings case study</div>'+
+    '<div class="q-text">Markets are stressed and Booking Holdings\u2019 share price falls ~45%, as it did during COVID-19. The business model is intact, the competitive moat is unchanged, but the macro environment is painful. As a quality investor, what\u2019s the right call?</div>'+
+    '<div class="chart-container"><div class="chart-title">Booking Holdings \u2014 Share price (split-adjusted)</div>'+
+    '<div id="chartArea"><canvas id="bookingChart" style="width:100%;height:260px;"></canvas></div>'+
+    '<div class="chart-annotations">'+
+      '<div class="chart-anno"><div class="ca-dot" style="background:rgba(255,255,255,0.5)"></div>Pre-COVID peak $83</div>'+
+      '<div class="chart-anno"><div class="ca-dot" style="background:#D83949"></div>COVID low $52 (\u221245%)</div>'+
+      '<div class="chart-anno"><div class="ca-dot" style="background:#00c9a3"></div>Apr 2026 $182 (+250% from low)</div>'+
+    '</div></div>'+
+    '<div class="options-grid">'+
+    '<button class="option-btn" onclick="selectOption(0)"><span class="opt-letter">A</span><span>Sell \u2014 travel stocks are too risky, the sector damage is permanent</span></button>'+
+    '<button class="option-btn" onclick="selectOption(1)"><span class="opt-letter">B</span><span>Hold or add \u2014 if the investment thesis isn\u2019t impaired, the share price fall is an opportunity, not a reason to exit</span></button>'+
+    '<button class="option-btn" onclick="selectOption(2)"><span class="opt-letter">C</span><span>Sell and wait for the price to fully recover before buying back in</span></button>'+
+    '<button class="option-btn" onclick="selectOption(3)"><span class="opt-letter">D</span><span>Sell \u2014 diversify into bonds to avoid this kind of volatility</span></button>'+
+    '</div>'+
+    '<div id="feedbackArea"></div>'+
+    '<div class="next-btn-wrap" id="nextWrap" style="display:none"><button class="btn-primary" onclick="nextQuestion()">See your results \u2192</button></div>';
+}
+
+var q4Correct = [0,1,2,3,4];
+var q4Tiles = [
+  {text:'Dominant market positions in stable, growing industries', correct:true},
+  {text:'Hard-to-replicate competitive advantages', correct:true},
+  {text:'Low sensitivity to the economic cycle', correct:true},
+  {text:'Sustainable free cash flow and effective capital allocation', correct:true},
+  {text:'Healthy balance sheets with low capital intensity', correct:true},
+  {text:'Maximum leverage and aggressive acquisitions', correct:false},
+  {text:'High sensitivity to economic cycles', correct:false},
+  {text:'Capital preservation in government bonds above all else', correct:false}
+];
+
+function renderQ4() {
+  // Shuffle tiles
+  var shuffled = q4Tiles.map(function(t,i){return {text:t.text, correct:t.correct, idx:i};});
+  for(var i=shuffled.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var tmp=shuffled[i]; shuffled[i]=shuffled[j]; shuffled[j]=tmp; }
+  window._q4Shuffled = shuffled;
+  window._q4Selected = [];
+
+  return '<div class="q-category"><span class="icon">\u{1F52C}</span> Why quality in your portfolio?</div>'+
+    '<div class="q-text">Quality in a portfolio means owning businesses that grow reliably, protect in downturns, and give you the conviction to stay invested \u2014 which is ultimately where all the compounding happens. Select all the key attributes quality investors look for.</div>'+
+    '<div class="tiles-hint">Tap to select \u2014 there are 5 correct attributes</div>'+
+    '<div class="tiles-grid" id="tilesGrid">'+
+    shuffled.map(function(t,i){
+      return '<button class="tile-btn" data-tidx="'+i+'" onclick="toggleTile('+i+')"><span class="tile-check"></span>'+t.text+'</button>';
+    }).join('')+'</div>'+
+    '<div style="text-align:center"><button class="tiles-submit" id="tilesSubmit" onclick="submitTiles()" disabled>Submit selection</button></div>'+
+    '<div id="feedbackArea"></div>'+
+    '<div class="next-btn-wrap" id="nextWrap" style="display:none"><button class="btn-primary" onclick="nextQuestion()">See your results \u2192</button></div>';
+}
+
+function toggleTile(idx) {
+  if(answered) return;
+  var sel = window._q4Selected;
+  var pos = sel.indexOf(idx);
+  if(pos > -1) sel.splice(pos,1); else sel.push(idx);
+  window._q4Selected = sel;
+  document.querySelectorAll('.tile-btn').forEach(function(btn,i){
+    if(sel.indexOf(i)>-1) { btn.classList.add('selected'); btn.querySelector('.tile-check').textContent='\u2713'; }
+    else { btn.classList.remove('selected'); btn.querySelector('.tile-check').textContent=''; }
+  });
+  document.getElementById('tilesSubmit').disabled = sel.length === 0;
+  resetIdle();
+}
+
+function submitTiles() {
+  if(answered) return;
+  answered = true;
+  var sel = window._q4Selected;
+  var shuffled = window._q4Shuffled;
+  var allCorrect = true;
+
+  document.querySelectorAll('.tile-btn').forEach(function(btn,i){
+    var isSelected = sel.indexOf(i) > -1;
+    var isCorrect = shuffled[i].correct;
+    btn.style.pointerEvents = 'none';
+    if(isSelected && isCorrect) btn.classList.add('correct-tile');
+    else if(isSelected && !isCorrect) { btn.classList.add('wrong-tile'); allCorrect = false; }
+    else if(!isSelected && isCorrect) { btn.classList.add('missed-tile'); allCorrect = false; }
+  });
+
+  document.getElementById('tilesSubmit').style.display='none';
+  if(allCorrect) score++;
+
+  var fbClass = allCorrect ? 'correct-fb' : 'wrong-fb';
+  var fbText = allCorrect
+    ? '<strong>\u2713 Spot on!</strong> All five attributes work together: dominant market positions, hard-to-replicate moats, low economic cycle sensitivity, sustainable free cash flow, and healthy low-leverage balance sheets. Together they allow a business to compound reliably \u2014 through bull markets, downturns and everything in between.'
+    : '<strong>\u2717 Not quite.</strong> Quality investors look for five defining attributes: dominant market positions, hard-to-replicate competitive moats, low economic cycle sensitivity, strong sustainable free cash flow, and healthy low-leverage balance sheets \u2014 the characteristics that allow reliable long-term compounding.';
+
+  document.getElementById('feedbackArea').innerHTML = '<div class="feedback-box '+fbClass+'">'+fbText+'</div>';
+  document.getElementById('nextWrap').style.display='block';
+  resetIdle();
+}
+
+var correctAnswers = [1, 2, 1]; // Q1=B, Q2=C, Q3=B (Q4 handled separately)
+var feedbacks = [
+  { ok: 'When markets feel most uncertain, outcome-first thinking matters most. SJP\u2019s investment belief is that the right question is never \u201Cwhat is the market doing?\u201D \u2014 it\u2019s \u201Cwhat does this client need?\u201D That\u2019s the lens that shaped Polaris, InRetirement and PMI.<br><br>\u201CFear and panic are drivers of successful headlines. Patience and calm are drivers of successful investment returns.\u201D \u2014 Robin Ellis, Director of Multi Asset Portfolio Management.',
+    no: 'SJP\u2019s first belief is that achieving the right client outcomes is the starting point for every decision. Rather than asking \u2018what can the market offer?\u2019, the team asks, \u2018what does the client need?\u2019 first.' },
+  { ok: 'The strategy fell significantly less than the market during COVID, and recovered in just 55 days versus 329 days for the MSCI ACWI. With a downside capture ratio of ~72%, it absorbs only about 72 cents of every dollar the market loses. Smaller drawdowns, quicker recovery \u2014 that\u2019s resilient compounding in action.',
+    no: 'The strategy fell meaningfully less than the MSCI ACWI during COVID, and recovered in just 55 days compared to 329 days for the index. A downside capture of ~72% means less damage on the way down, and a stronger base to compound from on the way back up.' },
+  { ok: 'Booking\u2019s competitive moat \u2014 dominant market position, network effects, asset-light model \u2014 never changed during COVID. Only the share price did. Selling at ~$52 and missing the recovery to $182 by April 2026 would have meant forgoing +250% in returns. As Robin Ellis noted after Q1 2025\u2019s volatility: \u201CFear and panic are drivers of successful headlines. Patience and calm are drivers of successful investment returns.\u201D The Quality team stayed patient, adding to the position rather than exiting.',
+    no: 'COVID was an exogenous shock to travel volumes, not to Booking\u2019s structural competitive advantages. The moat survived intact, free cash flow recovered, and by 2025 the business was generating $9.1bn in annual free cash flow \u2014 stronger than before the pandemic. The investment thesis was not broken.' }
+];
+
+function renderQuestion() {
+  answered = false;
+  document.getElementById('progressFill').style.width = (currentQ/TOTAL_Q*100)+'%';
+  document.getElementById('stepLabel').textContent = (currentQ+1)+' of '+TOTAL_Q;
+  var html;
+  if(currentQ===0) html = renderQ1();
+  else if(currentQ===1) html = renderQ2();
+  else if(currentQ===2) html = renderQ3();
+  else html = renderQ4();
+  document.getElementById('questionCard').innerHTML = html;
+  if(currentQ===2) setTimeout(renderChart, 100);
+}
+
+function selectOption(idx) {
+  if(answered || currentQ >= 3) return;
+  answered = true;
+  var correct = correctAnswers[currentQ];
+  var ok = idx === correct;
+  if(ok) score++;
+  var btns = document.querySelectorAll('.option-btn');
+  btns.forEach(function(btn,i){ if(i===correct) btn.classList.add('correct'); else if(i===idx&&!ok) btn.classList.add('wrong'); btn.style.pointerEvents='none'; });
+  var fb = feedbacks[currentQ];
+  document.getElementById('feedbackArea').innerHTML = '<div class="feedback-box '+(ok?'correct-fb':'wrong-fb')+'"><strong>'+(ok?'\u2713 Correct!':'\u2717 Not quite.')+'</strong> '+(ok?fb.ok:fb.no)+'</div>';
+  document.getElementById('nextWrap').style.display='block';
+  resetIdle();
+}
+
+function nextQuestion() {
+  if(++currentQ >= TOTAL_Q) showResults();
+  else { renderQuestion(); window.scrollTo(0,0); }
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0); resetIdle();
+}
+function startQuiz() { currentQ=0; score=0; answered=false; showScreen('screen-quiz'); renderQuestion(); }
+
+function renderEmailForm() {
+  return '<h3>Enter the draw to win our Quality basket</h3>'+
+    '<div class="ec-sub">Every item in the prize basket comes from a company held in the Global Franchise Fund. Leave your details to be entered into the draw.</div>'+
+    '<div style="display:flex;gap:10px;"><input class="ec-field" id="firstNameInput" type="text" placeholder="First name" autocomplete="off" autocorrect="off" spellcheck="false" style="flex:1">'+
+    '<input class="ec-field" id="lastNameInput" type="text" placeholder="Last name" autocomplete="off" autocorrect="off" spellcheck="false" style="flex:1"></div>'+
+    '<input class="ec-field" id="emailInput" type="email" placeholder="Your email address" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="email">'+
+    '<div class="ec-error-msg" id="ecError"></div>'+
+    '<button class="ec-submit" id="submitBtn" onclick="submitEntry()">Enter the draw \u2192</button>'+
+    '<div class="ec-privacy">Your details will only be used to contact the winner. We won\u2019t add you to any mailing lists.</div>';
+}
+
+function showResults() {
+  showScreen('screen-results');
+  document.getElementById('progressFill').style.width='100%';
+  setTimeout(function(){ document.getElementById('scoreCircle').style.strokeDashoffset = 565-(565*score/TOTAL_Q); },200);
+  document.getElementById('scoreNum').textContent=score;
+  var titles = {4:"Quality Master",3:"Sharp eye for Quality",2:"Getting there",1:"The journey begins",0:"Fresh perspective"};
+  var descs = {4:"You think exactly like a Quality investor. Every answer showed deep understanding of our approach.",3:"Impressive \u2014 you\u2019ve clearly got a strong grasp of what separates enduring businesses.",2:"You\u2019re on the right track. A conversation with our Quality team could sharpen those instincts further.",1:"Everyone starts somewhere \u2014 and curiosity is the first step. Come chat with us.",0:"A fresh set of eyes can be valuable! Let\u2019s talk about how Quality differs from conventional thinking."};
+  document.getElementById('resultTitle').textContent=titles[score];
+  document.getElementById('resultDesc').textContent=descs[score];
+  if(score === TOTAL_Q) {
+    document.getElementById('emailCapture').innerHTML = renderEmailForm();
+    document.getElementById('emailCapture').style.display='block';
+    document.getElementById('resultActions').style.display='none';
+    launchConfetti();
+  } else {
+    document.getElementById('emailCapture').innerHTML = '<div style="text-align:center;padding:24px 20px;"><p style="font-size:15px;color:var(--gg);line-height:1.6;margin-bottom:6px;">Score 4 out of 4 to enter the draw for our Quality basket.</p><p style="font-size:13px;color:rgba(255,255,255,0.3);">Feel free to try again!</p></div>';
+    document.getElementById('emailCapture').style.display='block';
+    document.getElementById('resultActions').style.display='flex';
+  }
+}
+
+/* ── Entry management ── */
+function getEntries(){ try{return JSON.parse(localStorage.getItem('q91_entries')||'[]');}catch(e){return [];} }
+function saveEntryLocal(e){ var a=getEntries(); a.push(e); localStorage.setItem('q91_entries',JSON.stringify(a)); updateCounter(); }
+function updateEntry(idx,u){ var a=getEntries(); if(a[idx]){for(var k in u) a[idx][k]=u[k]; localStorage.setItem('q91_entries',JSON.stringify(a));} }
+function updateCounter(){ var n=getEntries().length; document.getElementById('entryCounter').textContent=n>0?n+(n===1?' entry':' entries'):''; }
+
+function submitEntry() {
+  var firstName=document.getElementById('firstNameInput').value.trim();
+  var lastName=document.getElementById('lastNameInput').value.trim();
+  var email=document.getElementById('emailInput').value.trim();
+  var err=document.getElementById('ecError');
+  document.querySelectorAll('.ec-field').forEach(function(f){f.classList.remove('error');});
+  err.style.display='none';
+  if(!firstName){document.getElementById('firstNameInput').classList.add('error');err.textContent='Please enter your first name';err.style.display='block';return;}
+  if(!lastName){document.getElementById('lastNameInput').classList.add('error');err.textContent='Please enter your last name';err.style.display='block';return;}
+  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){document.getElementById('emailInput').classList.add('error');err.textContent='Please enter a valid email address';err.style.display='block';return;}
+  if(getEntries().some(function(e){return e.email.toLowerCase()===email.toLowerCase();})){err.textContent="You\u2019re already entered \u2014 good luck!";err.style.display='block';document.getElementById('emailInput').classList.add('error');return;}
+  document.getElementById('submitBtn').textContent='Submitting...';document.getElementById('submitBtn').style.pointerEvents='none';
+  var idx=getEntries().length;
+  var fullName=firstName+' '+lastName;
+  saveEntryLocal({name:fullName,firstName:firstName,lastName:lastName,email:email,score:score,timestamp:new Date().toISOString(),time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),synced:false});
+  submitToPardot(firstName,lastName,email,score).then(function(){updateEntry(idx,{synced:true});showSuccess(firstName,true);}).catch(function(){showSuccess(firstName,false);});
+}
+
+function showSuccess(name,synced) {
+  var msg='<div class="sync-status sync-ok">\u2713 Submitted to Pardot</div>';
+  document.getElementById('emailCapture').innerHTML='<div class="ec-success"><div class="tick">\u2713</div><h3>You\u2019re in the draw!</h3><p>Good luck, '+esc(name.split(' ')[0])+'. We\u2019ll be in touch if you win our Quality basket.</p>'+msg+'</div>';
+  document.getElementById('resultActions').style.display='flex'; resetIdle();
+}
+
+function resetQuiz() {
+  document.getElementById('scoreCircle').style.strokeDashoffset=565;
+  document.getElementById('emailCapture').innerHTML=renderEmailForm();
+  document.getElementById('resultActions').style.display='none';
+  showScreen('screen-welcome');
+}
+
+/* ── Idle reset ── */
+var idleTimer;
+function resetIdle(){clearTimeout(idleTimer);idleTimer=setTimeout(function(){if(!document.getElementById('adminPanel').classList.contains('active'))resetQuiz();},90000);}
+['touchstart','click','keydown'].forEach(function(e){document.addEventListener(e,resetIdle,{passive:true});});
+
+/* ── Admin ── */
+var tapCount=0,tapTimer;
+document.getElementById('logoMain').addEventListener('click',function(){tapCount++;clearTimeout(tapTimer);tapTimer=setTimeout(function(){tapCount=0;},600);if(tapCount>=3){tapCount=0;openAdmin();}});
+
+function openAdmin(){
+  var entries=getEntries();
+  var avg=entries.length?(entries.reduce(function(s,e){return s+e.score;},0)/entries.length).toFixed(1):'\u2014';
+  var synced=entries.filter(function(e){return e.synced;}).length;
+  var failed=entries.length-synced;
+  document.getElementById('adminStats').innerHTML=
+    '<div class="admin-stat"><div class="as-num">'+entries.length+'</div><div class="as-label">Total entries</div></div>'+
+    '<div class="admin-stat"><div class="as-num">'+avg+'</div><div class="as-label">Avg score</div></div>'+
+    '<div class="admin-stat"><div class="as-num">'+synced+'</div><div class="as-label">Synced</div></div>'+
+    (failed>0?'<div class="admin-stat"><div class="as-num" style="color:var(--wy)">'+failed+'</div><div class="as-label">Pending</div></div>':'');
+  if(!entries.length){document.getElementById('adminTableWrap').innerHTML='<div style="text-align:center;padding:40px;color:var(--gg);font-style:italic;">No entries yet</div>';}
+  else{document.getElementById('adminTableWrap').innerHTML='<table class="admin-table"><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Score</th><th>Time</th><th>Synced</th></tr></thead><tbody>'+entries.map(function(e,i){return '<tr><td>'+(i+1)+'</td><td>'+esc(e.name)+'</td><td>'+esc(e.email)+'</td><td>'+e.score+'/4</td><td>'+(e.time||'\u2014')+'</td><td>'+(e.synced?'\u2713':'\u2717')+'</td></tr>';}).join('')+'</tbody></table>';}
+  document.getElementById('winnerArea').innerHTML='';
+  document.getElementById('adminPanel').classList.add('active');
+}
+function closeAdmin(){document.getElementById('adminPanel').classList.remove('active');}
+function exportCSV(){var e=getEntries();if(!e.length)return;var c='First Name,Last Name,Email,Score,Timestamp,Synced\n';e.forEach(function(r){c+='"'+(r.firstName||r.name)+'","'+(r.lastName||'')+'","'+r.email+'",'+r.score+',"'+r.timestamp+'",'+(r.synced?'Yes':'No')+'\n';});var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:'text/csv'}));a.download='quality-challenge-entries.csv';a.click();}
+function pickWinner(){var e=getEntries();if(!e.length)return;var w=e[Math.floor(Math.random()*e.length)];document.getElementById('winnerArea').innerHTML='<div class="winner-banner"><div style="font-size:13px;color:var(--gg);margin-bottom:8px;text-transform:uppercase;letter-spacing:2px;">Winner</div><div class="wb-name">'+esc(w.name)+'</div><div class="wb-email">'+esc(w.email)+' \u2014 Score: '+w.score+'/4</div></div>';}
+function retryFailed(){var e=getEntries(),f=[];e.forEach(function(x,i){if(!x.synced)f.push(i);});if(!f.length){alert('All synced!');return;}var c=0;f.forEach(function(idx){var r=e[idx];submitToPardot(r.firstName||r.name,r.lastName||'',r.email,r.score).then(function(){updateEntry(idx,{synced:true});c++;if(c===f.length){alert('Retried '+f.length+' entries.');openAdmin();}}).catch(function(){c++;if(c===f.length){alert('Retried. Check Synced column.');openAdmin();}});});}
+function clearEntries(){if(confirm('Delete all '+getEntries().length+' local entries? Pardot records are unaffected.')){localStorage.removeItem('q91_entries');updateCounter();openAdmin();}}
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function launchConfetti(){var colors=['#009D80','#FBAA96','#FCAA28','#D83949','#591739','#E8E5CE'];for(var i=0;i<50;i++){var el=document.createElement('div');el.className='confetti-piece';el.style.left=Math.random()*100+'vw';el.style.top='-10px';el.style.background=colors[Math.floor(Math.random()*colors.length)];el.style.borderRadius=Math.random()>0.5?'50%':'2px';el.style.width=(6+Math.random()*8)+'px';el.style.height=(6+Math.random()*8)+'px';el.style.animationDelay=(Math.random()*1.5)+'s';el.style.animationDuration=(2+Math.random()*2)+'s';document.body.appendChild(el);setTimeout(function(e){return function(){e.remove();};}(el),5000);}}
+updateCounter();resetIdle();
+</script>
+</body>
+</html>
