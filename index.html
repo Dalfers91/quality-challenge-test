@@ -276,39 +276,33 @@ var PARDOT_URL = "https://weare.ninetyone.com/l/28902/2026-05-27/9rgtz1";
 var CONFIGURED = true;
 
 function submitToPardot(firstName, lastName, email, scoreVal) {
-  return new Promise(function(resolve, reject) {
-    var data = new URLSearchParams();
-    data.append('First_Name', firstName);
-    data.append('Last_Name', lastName);
-    data.append('email', email);
-    data.append('Quiz_Score', scoreVal + '/4');
+  return new Promise(function(resolve) {
+    var iframe = document.createElement('iframe');
+    iframe.name = 'pardot_' + Date.now();
+    iframe.style.cssText = 'position:absolute;width:1px;height:1px;left:-9999px;top:-9999px;';
+    document.body.appendChild(iframe);
 
-    // Method 1: fetch with no-cors (sends the data, can't read response)
-    fetch(PARDOT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: data
-    }).then(function() {
-      resolve('ok');
-    }).catch(function() {
-      // Method 2: fallback to hidden iframe if fetch fails
-      try {
-        var iframe = document.createElement('iframe');
-        iframe.name = 'pardot_' + Date.now(); iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-        var form = document.createElement('form');
-        form.method = 'POST'; form.action = PARDOT_URL; form.target = iframe.name; form.style.display = 'none';
-        var fields = {'First_Name': firstName, 'Last_Name': lastName, 'email': email, 'Quiz_Score': scoreVal + '/4'};
-        for (var key in fields) {
-          var inp = document.createElement('input'); inp.type='hidden'; inp.name=key; inp.value=fields[key];
-          form.appendChild(inp);
-        }
-        document.body.appendChild(form);
-        form.submit();
-        setTimeout(function(){ try{document.body.removeChild(iframe);}catch(e){} try{document.body.removeChild(form);}catch(e){} },3000);
-        resolve('fallback-ok');
-      } catch(e) { reject('error'); }
-    });
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = PARDOT_URL;
+    form.target = iframe.name;
+
+    var fields = {'First_Name': firstName, 'Last_Name': lastName, 'email': email, 'Quiz_Score': scoreVal + '/4'};
+    for (var key in fields) {
+      var inp = document.createElement('input');
+      inp.type = 'hidden'; inp.name = key; inp.value = fields[key];
+      form.appendChild(inp);
+    }
+    document.body.appendChild(form);
+
+    setTimeout(function() {
+      form.submit();
+      setTimeout(function() {
+        try { document.body.removeChild(iframe); } catch(e) {}
+        try { document.body.removeChild(form); } catch(e) {}
+        resolve('ok');
+      }, 5000);
+    }, 200);
   });
 }
 
